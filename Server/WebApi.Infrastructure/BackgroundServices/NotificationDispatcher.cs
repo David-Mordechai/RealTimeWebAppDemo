@@ -1,15 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Net.Http;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using WebApi.Services.Data.Entities;
+using WebApi.Domain.Entities;
+using System.Net.Http;
+using WebApi.Application.Repositories;
 
-namespace WebApi.Services
+namespace WebApi.Infrastructure.BackgroundServices
 {
     public class NotificationDispatcher : BackgroundService
     {
@@ -19,9 +20,9 @@ namespace WebApi.Services
         private readonly IServiceProvider _serviceProvider;
 
         public NotificationDispatcher(
-            ILogger<NotificationDispatcher> logger, 
+            ILogger<NotificationDispatcher> logger,
             IHttpClientFactory httpClientFactory,
-            Channel<string> channel, 
+            Channel<string> channel,
             IServiceProvider serviceProvider)
         {
             _logger = logger;
@@ -32,33 +33,37 @@ namespace WebApi.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (stoppingToken.IsCancellationRequested is false && 
+            while (stoppingToken.IsCancellationRequested is false &&
                 _channel.Reader.Completion.IsCompleted is false)
             {
                 // read from channel, when is something to read then goes to try block
                 var msg = await _channel.Reader.ReadAsync();
                 try
                 {
+                    _logger.LogInformation("Background Service started for message {message}", msg);
                     using var scope = _serviceProvider.CreateScope();
-                    
-                    var database = scope.ServiceProvider.GetRequiredService<Database>();
-                    
-                    if (!await database.Users.AnyAsync(stoppingToken))
+
+                    var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+                    var users = await userRepository.GetUsers();
+
+                    if (users.Any() is false)
                     {
-                        database.Users.Add(new User());
-                        await database.SaveChangesAsync(stoppingToken);
+                        await userRepository.AddUserAsync(new User());
                     }
 
-                    var user = await database.Users.FirstOrDefaultAsync();
+                    var user = await userRepository.GetUserById(1);
 
                     var client = _httpClientFactory.CreateClient();
                     var response = await client.GetStringAsync("https://docs.microsoft.com/en-us/dotnet/core/");
-                    user.Message = $"{msg} - {response}";
 
-                    await database.SaveChangesAsync(stoppingToken);
+                    user.Message = $"{msg} - {response}";
+                    await userRepository.UpdateUser(user);
+                    await Task.Delay(10000);
+                    _logger.LogInformation("Background Service ended for message {message}", msg);
                 }
                 catch (Exception e)
-                {   
+                {
                     _logger.LogError(e, "notification failed");
                 }
             }

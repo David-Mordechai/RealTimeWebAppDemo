@@ -7,3 +7,11 @@
 /Server/.vs/Server/v16
 /Server/WebApi/WebApi.csproj.user
 /Server/.vs/Server/DesignTimeBuild/.dtbcache.v2
+/Server/WebApi.Domain/obj
+/Server/WebApi.Application/bin/Debug/netstandard2.1
+/Server/WebApi.Application/obj
+/Server/WebApi.Infrastructure/bin/Debug/netstandard2.1
+/Server/WebApi.Infrastructure/obj
+/Server/WebApi.Persistent/bin/Debug/netstandard2.1
+/Server/WebApi.Persistent/obj
+/Server/WebApi.Domain/bin/Debug/netstandard2.1

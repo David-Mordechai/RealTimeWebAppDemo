@@ -1,4 +1,4 @@
-﻿namespace WebApi.Services.Data.Entities
+﻿namespace WebApi.Domain.Entities
 {
     public class User
     {
