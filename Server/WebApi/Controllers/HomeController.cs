@@ -23,7 +23,12 @@ namespace WebApi.Controllers
         [Route("[action]")]
         public async Task<bool> Send([FromQuery]string message)
         {
-            await _notificationChannel.SendAsync(message);
+            var messages = new[] { "a", "b", "c", "d", "e" };
+            foreach (var msg in messages)
+            {
+                await _notificationChannel.SendAsync(msg);
+            }
+            
             return true;
         }
     }

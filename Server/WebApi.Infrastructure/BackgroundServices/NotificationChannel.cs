@@ -12,6 +12,7 @@ namespace WebApi.Infrastructure.BackgroundServices
         {
             _channel = channel;
         }
+
         public async Task SendAsync(string message)
         {
             await _channel.Writer.WriteAsync(message);

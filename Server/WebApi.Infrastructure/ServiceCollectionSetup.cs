@@ -11,7 +11,8 @@ namespace WebApi.Infrastructure
         {
             services.AddHostedService<NotificationDispatcher>();
             services.AddSingleton(Channel.CreateUnbounded<string>());
-            services.AddScoped<INotificationChannel, NotificationChannel>();
+            services.AddSingleton<INotificationChannel, NotificationChannel>();
+            services.AddSingleton<IMessageProcesser, MessageProcesser>();
         }
     }
 }
